@@ -1,0 +1,241 @@
+options {
+  JDK_VERSION = "1.5";
+}
+
+PARSER_BEGIN(ParserDLV)
+
+	package parser;
+	
+	import gui.Editor;
+	
+	public class ParserDLV {
+						
+  		public static void main(String[] args) throws ParseException {
+	    	Editor gui = new Editor();
+  		}
+  		
+	}
+  		
+PARSER_END(ParserDLV)
+
+SKIP : { " " |	"\r" |	"\t" |	"\n" | <"%"(~["\n"])* "\n"> }
+
+TOKEN : 
+{
+	<AND: "," >
+|	<OR: "v" >
+|	<NOT: "not" >
+|	<NOT_EQUAL: "!=" >
+|	<COMPARISON: "<" | ">" | "<=" | ">=" > 
+|	<EQUAL: "=" >
+|	<OPERATOR: "+" | "*" >
+|	<MINUS: "-" >
+|	<STRONG: ":-" >
+|	<WEAK: ":~" >
+|	<COLON: ":" >
+|	<DOT: "." >
+|	<ORB: "(" >
+|	<CRB: ")" >
+|	<OSB: "[" >
+|	<CSB: "]" >
+|	<OBB: "{" >
+|	<CBB: "}" >
+|	<UNKNOWN: "_" >
+|	<INT: "#int" >
+|	<MAXINT: "#maxint" >
+|	<FUNCTION_NAME: "#count" | "#sum" | "#times" | "#min" | "#max" >
+|	<CONSTANT: ["a"-"z"](["a"-"z","A"-"Z","0"-"9"])* >
+|	<NUMBER: "0" | ["1"-"9"](["0"-"9"])* >
+|	<VARIABLE: ["A"-"Z"](["a"-"z","A"-"Z","0"-"9"])* >
+}
+
+void dlp() : {}
+{
+	rule() dlp() | maxint() dlp() | <EOF>
+}
+
+void rule() : {}
+{
+	headIfBody() | strongConstraint() | weakConstraint()
+}
+
+void maxint() : {}
+{
+	<MAXINT> <EQUAL> <NUMBER> <DOT> 
+}
+
+void headIfBody() : {}
+{
+	head() headIfBody_1()
+}
+
+void headIfBody_1() : {}
+{
+	<DOT> | <OR> headIfBody() | <STRONG> body() headIfBody_2()
+}
+
+void headIfBody_2() : {}
+{
+	<DOT> | <AND> body() headIfBody_2()
+}
+
+void strongConstraint() : {}
+{
+	<STRONG> body() strongConstraint_1()
+}
+
+void strongConstraint_1() : {}
+{
+	<DOT> | <AND> body() strongConstraint_1()
+}
+
+void weakConstraint() : {}
+{
+	<WEAK> body() weakConstraint_1()
+}
+
+void weakConstraint_1() : {}
+{
+	<DOT> weakConstraint_2() | <AND> body() weakConstraint_1()
+}
+
+void weakConstraint_2() : {}
+{
+	( weightLevel() )?
+} 
+
+void weightLevel() : {}
+{
+	<OSB> weightLevel_1()
+}
+
+void weightLevel_1() : {}
+{
+	x() <COLON> weightLevel_2() | <COLON> x() <CSB>
+}
+
+void weightLevel_2() : {}
+{
+	x() <CSB> | <CSB>
+}
+
+void x() : {}
+{
+	<VARIABLE> | <NUMBER>
+}
+
+void head() : {}
+{
+	atom() | <MINUS> atom()
+}
+
+void body() : {}
+{
+	<MINUS> atom() | <INT> <ORB> <VARIABLE> <CRB> | <VARIABLE> body_1() 
+	| <CONSTANT> body_2() | <NUMBER> body_3() | aggregateFunction() body_4() | <NOT> body_5()
+}
+
+void body_1() : {}
+{
+	<COMPARISON> body_A() | <EQUAL> body_1_2() | <NOT_EQUAL> body_C()
+}
+
+void body_1_2() : {}
+{
+	<VARIABLE> body_B() | <CONSTANT> body_B() | <NUMBER> body_B() | aggregateFunction()
+}
+
+void body_2() : {}
+{
+	<COMPARISON> body_C() | <EQUAL> body_C() | <NOT_EQUAL> body_C() | atom_1()
+}
+
+void body_3() : {}
+{
+	<COMPARISON> body_A() | <EQUAL> body_A() | <NOT_EQUAL> body_C()
+}
+
+void body_4() : {}
+{
+	<COMPARISON> body_D() | <EQUAL> body_D()
+}
+
+void body_5() : {}
+{
+	aggregateFunction() body_5_1() | atom()
+}
+						
+void body_5_1() : {}
+{
+	<EQUAL> body_D()
+}
+
+void body_A() : {}
+{
+	<VARIABLE> | <CONSTANT> | <NUMBER> | aggregateFunction()
+}
+
+void body_B() : {}
+{
+	( <OPERATOR> body_C() )?
+}
+
+void body_C() : {}
+{
+	<VARIABLE> | <CONSTANT> | <NUMBER>
+}
+
+void body_D() : {}
+{
+	<VARIABLE> | <NUMBER>
+}
+						
+void atom() : {}
+{
+	<CONSTANT> atom_1()
+}
+
+void atom_1() : {}
+{
+	( <ORB> terms() <CRB> )?
+}
+
+void terms() : {}
+{
+	<VARIABLE> terms_1() | <CONSTANT> terms_1() | <UNKNOWN> terms_1() | <NUMBER> terms_1()
+}
+
+void terms_1() : {}
+{
+	( <AND> terms() )?
+}
+
+void aggregateFunction() : {}
+{
+	<FUNCTION_NAME> symbolicSet()
+}
+
+void symbolicSet() : {}
+{
+	<OBB> vars() <COLON> conj() <CBB>
+}
+
+void vars() : {}
+{
+	<VARIABLE> vars_1()
+}
+
+void vars_1() : {}
+{
+	( <AND> vars() )?
+}
+
+void conj() : {}
+{
+	atom() conj_1()
+}
+
+void conj_1() : {}
+{
+	( <AND> conj() )?
+}

@@ -1,0 +1,18 @@
+#maxint = 5.
+simone(1).
+in(X) v out(X) :- simone(X).
+
+
+7/3/2008 - 22:3:54
+1: [test.txt] - DLV parsed succesfully
+
+DLV [build BEN/Oct 11 2007   gcc 3.4.5 (mingw special)]
+
+{simone(1), out(1)}
+
+{simone(1), in(1)}
+
+
+--------------------------------------------------------------------------------------------
+
+
